@@ -6513,6 +6513,23 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         }
     } else {
         // search next chord
+        
+        // check if inside slur - select shortest slur beginning with this note
+        auto initialCR = lyrics->chordRest();
+        auto spanners = score()->spannerMap().findOverlapping(initialCR->tick().ticks(), initialCR->endTick().ticks());
+        Spanner* spannerToFollow = nullptr;
+        for (auto &spanner : spanners) {
+            if (spanner.value->startCR() == initialCR && spanner.value->isSlur()) {
+                if (!spannerToFollow || 
+                    (spannerToFollow->ticks() > spanner.value->ticks())
+                ) spannerToFollow = spanner.value;
+            }
+        }
+        if (spannerToFollow) {
+            nextSegment = toSegment(spannerToFollow->endCR()->segment());
+            // check if not already melisma line / other lyrics, if safe, add
+        }
+
         while ((nextSegment = nextSegment->next1(mu::engraving::SegmentType::ChordRest))) {
             EngravingItem* el = nextSegment->element(track);
             if (!el) {
@@ -6635,10 +6652,12 @@ void NotationInteraction::navigateToLyrics(MoveDirection direction, bool moveOnl
 //! NOTE: Copied from ScoreView::lyricsTab
 void NotationInteraction::navigateToNextSyllable()
 {
+
     if (!m_editData.element || !m_editData.element->isLyrics()) {
         LOGW("nextSyllable called with invalid current element");
         return;
     }
+
     Lyrics* lyrics = toLyrics(m_editData.element);
     ChordRest* initialCR = lyrics->chordRest();
     const bool hasPrecedingRepeat = initialCR->hasPrecedingJumpItem();
