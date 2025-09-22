@@ -6493,6 +6493,8 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
     mu::engraving::FontStyle fStyle = lyrics->fontStyle();
     mu::engraving::PropertyFlags fFlags = lyrics->propertyFlags(mu::engraving::Pid::FONT_STYLE);
     mu::engraving::TextStyleType styleType = lyrics->textStyleType();
+    
+    mu::engraving::ChordRest * initialCR = lyrics->chordRest();
 
     mu::engraving::Segment* nextSegment = segment;
     if (back) {
@@ -6515,7 +6517,6 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         // search next chord
 
         // check if at start of slur
-        auto initialCR = lyrics->chordRest();
         assert(initialCR->isChord());
         auto initialChord = toChord(initialCR);
 
@@ -6527,7 +6528,7 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
                 if (spanner.value->startCR() == initialCR && spanner.value->isSlur()) {
                     if (!spannerToFollow
                         || (spannerToFollow->ticks() > spanner.value->ticks())
-                    ) {
+                        ) {
                         spannerToFollow = spanner.value;
                     }
                 }
@@ -6543,12 +6544,9 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         while (initialChord->nextTiedChord()) {
             initialChord = initialChord->nextTiedChord();
         }
+        initialCR = toChordRest(initialChord);
 
         nextSegment = toSegment(initialChord->segment());
-        
-        if (nextSegment != lyrics->segment()) {
-            // check if not already melisma line / other lyrics, if safe, add
-        }
 
         while ((nextSegment = nextSegment->next1(mu::engraving::SegmentType::ChordRest))) {
             EngravingItem* el = nextSegment->element(track);
@@ -6642,6 +6640,10 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         if (fromLyrics->separator() && !fromLyrics->separator()->isEndMelisma()) {
             fromLyrics->undoChangeProperty(mu::engraving::Pid::LYRIC_TICKS, Fraction::fromTicks(0));
         }
+    }
+
+    if (fromLyrics == lyrics && initialCR != lyrics->chordRest()) {
+        lyrics->undoChangeProperty(mu::engraving::Pid::LYRIC_TICKS, nextLyrics->tick() - lyrics->chordRest()->endTick());
     }
 
     if (newLyrics) {
