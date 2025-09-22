@@ -6705,7 +6705,41 @@ void NotationInteraction::navigateToNextSyllable()
     mu::engraving::TextStyleType styleType = lyrics->textStyleType();
 
     // search next chord
-    Segment* nextSegment = segment;
+
+    // check if at start of slur
+    ChordRest* lastSlurredOrTiedCR = initialCR;
+    if (lastSlurredOrTiedCR->isChord()) {
+        auto slurredChord = toChord(lastSlurredOrTiedCR);
+
+        // if at start of slur, find the shortest slur and proceed to the end of it
+        if (slurredChord->startEndSlurs().startDown || slurredChord->startEndSlurs().startUp) {
+            auto spanners = score()->spannerMap().findOverlapping(slurredChord->tick().ticks(), slurredChord->endTick().ticks());
+            Spanner* spannerToFollow = nullptr;
+            for (auto& spanner : spanners) {
+                if (spanner.value->startCR() == slurredChord && spanner.value->isSlur()) {
+                    if (!spannerToFollow
+                        || (spannerToFollow->ticks() > spanner.value->ticks())
+                        ) {
+                        spannerToFollow = spanner.value;
+                    }
+                }
+            }
+            if (spannerToFollow) {
+                lastSlurredOrTiedCR = spannerToFollow->endCR();
+            }
+        }
+    }
+
+    // check if have tie - if so, proceed until no more ties
+    if (lastSlurredOrTiedCR->isChord()) {
+        auto tiedChord = toChord(lastSlurredOrTiedCR);
+        while (tiedChord->nextTiedChord()) {
+            tiedChord = tiedChord->nextTiedChord();
+        }
+        lastSlurredOrTiedCR = toChordRest(tiedChord);
+    }
+
+    Segment* nextSegment = lastSlurredOrTiedCR->segment();
     while ((nextSegment = nextSegment->next1(SegmentType::ChordRest))) {
         EngravingItem* el = nextSegment->element(track);
         if (!el || !el->isChord()) {
