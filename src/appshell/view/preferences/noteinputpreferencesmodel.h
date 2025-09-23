@@ -76,6 +76,9 @@ class NoteInputPreferencesModel : public QObject, public muse::Injectable, publi
 
     Q_PROPERTY(
         bool autoUpdateFretboardDiagrams READ autoUpdateFretboardDiagrams WRITE setAutoUpdateFretboardDiagrams NOTIFY autoUpdateFretboardDiagramsChanged FINAL)
+    
+    Q_PROPERTY(
+        bool lyricsFormMelismaAtSlurTies READ lyricsFormMelismaAtSlurTies WRITE setLyricsFormMelismaAtSlurTies NOTIFY lyricsFormMelismaAtSlurTiesChanged FINAL)
 
     muse::Inject<muse::shortcuts::IShortcutsConfiguration> shortcutsConfiguration = { this };
     muse::Inject<notation::INotationConfiguration> notationConfiguration = { this };
@@ -114,6 +117,7 @@ public:
     bool warnGuitarBends() const;
 
     bool autoUpdateFretboardDiagrams() const;
+    bool lyricsFormMelismaAtSlurTies() const;
 
 public slots:
     void setDefaultNoteInputMethod(int value);
@@ -140,6 +144,7 @@ public slots:
     void setWarnGuitarBends(bool value);
 
     void setAutoUpdateFretboardDiagrams(bool value);
+    void setLyricsFormMelismaAtSlurTies(bool value);
 
 signals:
     void defaultNoteInputMethodChanged(int value);
@@ -166,6 +171,7 @@ signals:
     void warnGuitarBendsChanged(bool value);
 
     void autoUpdateFretboardDiagramsChanged(bool value);
+    void lyricsFormMelismaAtSlurTiesChanged(bool value);
 };
 }
 
