@@ -57,6 +57,11 @@ void ContinuousPanel::setNotation(INotationPtr notation)
     m_notation = notation;
 }
 
+qreal ContinuousPanel::width() const
+{
+    return m_width;
+}
+
 //! NOTE: Copied from MU3
 void ContinuousPanel::paint(Painter& painter, const NotationViewContext& ctx, const engraving::rendering::PaintOptions& opt)
 {

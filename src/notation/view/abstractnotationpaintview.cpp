@@ -952,13 +952,18 @@ bool AbstractNotationPaintView::adjustCanvasPosition(const RectF& logicRect, boo
     PointF oldPos = pos;
 
     RectF showRect = logicRect;
+    
+    qreal panel_width = 0;
+    if (notation()->viewMode() == engraving::LayoutMode::LINE) {
+        panel_width = m_continuousPanel->width();
+    }
 
-    if (showRect.left() < viewRect.left()) {
-        pos.setX(showRect.left() - border);
+    if (showRect.left() < viewRect.left() + panel_width) {
+        pos.setX(showRect.left() - border - panel_width);
     } else if (showRect.left() > viewRect.right()) {
-        pos.setX(showRect.right() - width() / _scale + border);
+        pos.setX(showRect.right() - width() / _scale + border - panel_width);
     } else if (viewRect.width() >= showRect.width() && showRect.right() > viewRect.right()) {
-        pos.setX(showRect.left() - border);
+        pos.setX(showRect.left() - border - panel_width);
     }
 
     if (adjustVertically) {
